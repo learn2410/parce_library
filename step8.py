@@ -23,7 +23,7 @@ def check_for_redirect(response, text="вызван редирект"):
 
 
 def download_txt(url, filename, folder='books/'):
-    """Функция для скачивания текстовых файлов.
+    """Функция для скачивания текстовых и других файлов.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
         filename (str): Имя файла, с которым сохранять.
@@ -36,12 +36,15 @@ def download_txt(url, filename, folder='books/'):
         return
     if not check_need_path(folder):
         return
-    print(filename, url)
     response = requests.get(url, allow_redirects=False)
     response.raise_for_status()
     check_for_redirect(response, text=f'ошибка[dowmnload_txt]: url "{url}" вызвал редирект')
-    with open(os.path.join(folder, f'{filename}.txt'), 'wb') as file:
+    with open(os.path.join(folder, filename), 'wb') as file:
         file.write(response.content)
+
+
+def download_image(url, filename, folder='images/'):
+    download_txt(url, filename, folder)
 
 
 def get_book_info(url):
@@ -64,7 +67,9 @@ def main():
     for num in range(1, 11):
         try:
             book = get_book_info(f'{ROOT_URL}/b{num}/')
-            download_txt(f'{ROOT_URL}{book["text_link"]}', sanitize_filename(f'{num}. {book["name"]}.txt'))
+            filename = book['img_link'].split('/')[-1]
+            if not os.path.exists(f'images/{filename}'):
+                download_image(f'{ROOT_URL}{book["img_link"]}', sanitize_filename(filename))
         except requests.exceptions.HTTPError as err:
             print(err)
 
