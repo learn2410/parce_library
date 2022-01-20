@@ -46,7 +46,7 @@ def download_image(url, filename, folder='images/'):
     download_txt(url, filename, folder)
 
 
-def get_book_info(url):
+def parse_book_page(url):
     response = requests.get(url, allow_redirects=False)
     response.raise_for_status()
     check_for_redirect(response, text=f'ошибка[get_book_info]: url "{url}" вызвал редирект')
@@ -73,8 +73,8 @@ def get_book_info(url):
 def main():
     for num in range(1, 11):
         try:
-            book = get_book_info(f'{ROOT_URL}/b{num}/')
-            print(book['name'])
+            book = parse_book_page(f'{ROOT_URL}/b{num}/')
+            print('Заголовок:',book['name'])
             print(book['genre'], '\n')
         except requests.exceptions.HTTPError:
             pass
