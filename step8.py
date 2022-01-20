@@ -2,7 +2,6 @@ import requests
 import os
 from bs4 import BeautifulSoup
 from lxml import etree
-from pathvalidate import sanitize_filename
 
 # корневой url
 ROOT_URL = "https://tululu.org"
@@ -61,18 +60,24 @@ def get_book_info(url):
     name = ''.join(dom.xpath('//h1/text()')).replace('::', '  ').strip()
     autor = ''.join(dom.xpath('//h1/a/text()')).strip()
     comments = '\n'.join(dom.xpath('//*/div[@class="texts"]/span[@class="black"]/text()')).strip()
-    return {'text_link': text_link, 'img_link': img_link, 'name': name, 'autor': autor, 'comments': comments}
+    janre = dom.xpath('//*/span[@class="d_book"]/a/text()')
+    return {'text_link': text_link,
+            'img_link': img_link,
+            'name': name,
+            'autor': autor,
+            'comments': comments,
+            'genre': janre,
+            }
 
 
 def main():
     for num in range(1, 11):
         try:
             book = get_book_info(f'{ROOT_URL}/b{num}/')
-            print('*',book['name'])
-            print(book['comments'],'\n' if book['comments'] else '')
-        except requests.exceptions.HTTPError as err:
+            print(book['name'])
+            print(book['genre'], '\n')
+        except requests.exceptions.HTTPError:
             pass
-            # print(err)
 
 
 if __name__ == '__main__':
