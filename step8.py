@@ -60,18 +60,19 @@ def get_book_info(url):
     img_link = ''.join(dom.xpath('//*/div[@class="bookimage"]/a/img/@src'))
     name = ''.join(dom.xpath('//h1/text()')).replace('::', '  ').strip()
     autor = ''.join(dom.xpath('//h1/a/text()')).strip()
-    return {'text_link': text_link, 'img_link': img_link, 'name': name, 'autor': autor}
+    comments = '\n'.join(dom.xpath('//*/div[@class="texts"]/span[@class="black"]/text()')).strip()
+    return {'text_link': text_link, 'img_link': img_link, 'name': name, 'autor': autor, 'comments': comments}
 
 
 def main():
     for num in range(1, 11):
         try:
             book = get_book_info(f'{ROOT_URL}/b{num}/')
-            filename = book['img_link'].split('/')[-1]
-            if not os.path.exists(f'images/{filename}'):
-                download_image(f'{ROOT_URL}{book["img_link"]}', sanitize_filename(filename))
+            print('*',book['name'])
+            print(book['comments'],'\n' if book['comments'] else '')
         except requests.exceptions.HTTPError as err:
-            print(err)
+            pass
+            # print(err)
 
 
 if __name__ == '__main__':
