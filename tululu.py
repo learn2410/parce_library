@@ -1,7 +1,11 @@
-import requests
 import os
+import sys
+import argparse
+
+import requests
 from bs4 import BeautifulSoup
 from lxml import etree
+from pathvalidate import sanitize_filename
 
 # корневой url
 ROOT_URL = "https://tululu.org"
@@ -60,22 +64,51 @@ def parse_book_page(url):
     name = ''.join(dom.xpath('//h1/text()')).replace('::', '  ').strip()
     autor = ''.join(dom.xpath('//h1/a/text()')).strip()
     comments = '\n'.join(dom.xpath('//*/div[@class="texts"]/span[@class="black"]/text()')).strip()
-    janre = dom.xpath('//*/span[@class="d_book"]/a/text()')
+    genre = dom.xpath('//*/span[@class="d_book"]/a/text()')
     return {'text_link': text_link,
             'img_link': img_link,
             'name': name,
             'autor': autor,
             'comments': comments,
-            'genre': janre,
+            'genre': genre,
             }
 
 
+def create_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('start_id', default=1, type=int)
+    parser.add_argument('end_id', default=1, type=int)
+    return parser
+
+
 def main():
-    for num in range(1, 11):
+    parser = create_parser()
+    args = parser.parse_args(sys.argv[1:])
+    for num in range(args.start_id, args.end_id + 1):
         try:
             book = parse_book_page(f'{ROOT_URL}/b{num}/')
-            print('Заголовок:',book['name'])
-            print(book['genre'], '\n')
+            book_file = sanitize_filename(f'{num}. {book["name"]}.txt')
+            # --- скачиваем книгу
+            download_txt(f'{ROOT_URL}{book["text_link"]}', book_file)
+            # --- скачиваем обложку
+            img_file = book['img_link'].split('/')[-1]
+            if not os.path.exists(f'images/{img_file}'):
+                download_image(f'{ROOT_URL}{book["img_link"]}', sanitize_filename(img_file))
+            # --- записываем аннотацию
+            folder = 'catalog/'
+            if not check_need_path(folder):
+                continue
+            with open(os.path.join(folder, book_file), 'w') as file:
+                file.write('\n'.join([
+                    f'id: {num}',
+                    f'название: {book["name"]}',
+                    f'автор: {book["autor"]}',
+                    f'жанр: {str(book["genre"])}',
+                    f'обложка: {img_file}',
+                    f'комментарии:\n{book["comments"]}',
+                ]))
+            print('название:', book['name'])
+            print('Автор:', book['autor'], '\n')
         except requests.exceptions.HTTPError:
             pass
 
