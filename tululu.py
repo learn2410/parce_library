@@ -31,7 +31,6 @@ def download_file(url, filename, folder):
     response = requests.get(url, allow_redirects=False)
     response.raise_for_status()
     check_for_redirect(response)
-    print(response.headers['Content-Type'])
     if 'text/plain' in response.headers['Content-Type']:
         with open(os.path.join(folder, filename), 'w') as file:
             file.write(response.text)
@@ -113,7 +112,6 @@ def main():
             download_book(num)
         except requests.exceptions.HTTPError:
             print(f'!!! книга {num} отсутствует на сайте ----\n')
-            pass
     print('*** работа завершена ***')
 
 
